@@ -236,6 +236,11 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@master
         with:
-          name: openwrt-k2p
-          path: ./bin/targets/ramips/mt7621/
+          name: k2p
+          path: openwrt/bin/targets/ramips/mt7621/openwrt-ramips-mt7621-phicomm_k2p-squashfs-sysupgrade.bin
 
+      - name: Upload dl
+        uses: actions/upload-artifact@master
+        with:
+          name: dl
+          path: openwrt/dl
