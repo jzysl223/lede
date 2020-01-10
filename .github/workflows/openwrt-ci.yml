@@ -13,10 +13,10 @@ on:
   push:
     branches: 
       - master
-  schedule:
-    - cron: 0 20 * * *
-  release:
-    types: [published]
+  # schedule:
+    # - cron: 0 20 * * *
+  # release:
+    # types: [published]
 
 jobs:
 
@@ -212,29 +212,32 @@ jobs:
           sed -i 's/^[ \t]*//g' ./.config
           make defconfig
 
-      - name: Make download
-        run: |
-          make download -j8
-          find ./dl/ -size -1024c -exec rm -f {} \;
-          df -h
+      - name: Download - openwrt build dependencies
+      run: |
+        cd openwrt-$VERSION
+        make download -j10
 
-      - name: Compile firmware
-        run: |
-          make -j$(nproc) || make -j1 V=s
-          echo "======================="
-          echo "Space usage:"
-          echo "======================="
-          df -h
-          echo "======================="
-          du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
-          du -h --max-depth=1 ./build_dir
-          du -h --max-depth=1 ./bin
+      - name: Build - make openwrt source
+      run: |
+        cd openwrt-$VERSION
+        make -j4
 
-      - name: Prepare artifact
-        run: find ./bin/targets/ -type d -name "packages" | xargs rm -rf {}
+      - name: Remove - delete packages files
+      run: |
+        cd openwrt-$VERSION/bin/targets/ramips/mt7621/
+        rm -rf packages/
+        ls -hl
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@master
-        with:
-          name: OpenWrt firmware
-          path: ./bin/targets/
+      - name: Release - push to release file
+      uses: softprops/action-gh-release@master
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: openwrt-${{ env.VERSION }}/bin/targets/ramips/mt7621/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.RELEASES_DEPLOY_TOKEN }}
+
+      - name: Upload - push to artifact file
+      uses: actions/upload-artifact@master
+      with:
+        name: openwrt-k2p
+        path: openwrt-${{ env.VERSION }}/bin/targets/ramips/mt7621/
