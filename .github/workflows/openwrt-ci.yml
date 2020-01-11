@@ -9,9 +9,9 @@
 
 name: K2P
 
-on:
-  push:
-    branches: 
+# on:
+  # push:
+    # branches: 
       - master
   # schedule:
     # - cron: 0 20 * * *
